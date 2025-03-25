@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: git-candidates-database
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run preview
+    envVars:
+      - key: 
+        sync: false 
