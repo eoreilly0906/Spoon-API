@@ -1,173 +1,171 @@
 import { useState, useEffect } from 'react';
-import { retrieveRecipes, createRecipe } from '../api/recipeAPI';
-import type { Recipe } from '../interfaces/Recipe';
-import auth from '../utils/auth';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { getRecipes, createRecipe } from '../api/recipeAPI';
+import { searchRecipes, getRecipeDetails, type SpoonacularRecipe } from '../api/spoonacularAPI';
+import { type Recipe, MealTypes } from '../interfaces/Recipe';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 
-const YourRecipes = () => {
+type CreateRecipeInput = Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>;
+
+export default function YourRecipes() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    mealType: 'Breakfast',
-    region: '',
-    ingredients: '',
-    instructions: ''
-  });
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SpoonacularRecipe[]>([]);
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
-    if (auth.loggedIn()) {
-      fetchRecipes();
+    if (!user) {
+      navigate('/login');
+      return;
     }
-  }, []);
+    fetchRecipes();
+  }, [user, navigate]);
 
   const fetchRecipes = async () => {
     try {
-      const data = await retrieveRecipes();
+      const data = await getRecipes();
       setRecipes(data);
-    } catch (err) {
-      console.error('Failed to fetch recipes:', err);
+    } catch (error) {
+      console.error('Error fetching recipes:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    setSearching(true);
     try {
-      await createRecipe(formData);
-      setShowForm(false);
-      setFormData({
-        title: '',
-        mealType: 'Breakfast',
-        region: '',
-        ingredients: '',
-        instructions: ''
-      });
-      fetchRecipes();
-    } catch (err) {
-      console.error('Failed to create recipe:', err);
+      const results = await searchRecipes(searchQuery);
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Error searching recipes:', error);
+    } finally {
+      setSearching(false);
     }
   };
 
-  if (!auth.loggedIn()) {
-    return <div>Please log in to view your recipes.</div>;
+  const handleImportRecipe = async (spoonacularRecipe: SpoonacularRecipe) => {
+    try {
+      const details = await getRecipeDetails(spoonacularRecipe.id);
+      const newRecipe: CreateRecipeInput = {
+        title: details.title,
+        description: details.summary,
+        ingredients: details.extendedIngredients.map(ing => ing.original).join('\n'),
+        instructions: details.instructions,
+        imageUrl: details.image,
+        servings: details.servings,
+        prepTime: details.readyInMinutes,
+        cookTime: 0,
+        totalTime: details.readyInMinutes,
+        sourceUrl: details.sourceUrl,
+        mealType: MealTypes.LunchDinner,
+        region: 'International',
+        userId: user!.id
+      };
+
+      await createRecipe(newRecipe);
+      await fetchRecipes();
+      setSearchResults([]);
+      setSearchQuery('');
+    } catch (error) {
+      console.error('Error importing recipe:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="container">
-      <h1>Your Recipes</h1>
-      
-      <button 
-        className="btn btn-primary mb-4"
-        onClick={() => setShowForm(!showForm)}
-      >
-        {showForm ? 'Cancel' : 'Add New Recipe'}
-      </button>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Your Recipes</h1>
+        <Button onClick={() => navigate('/recipes/new')}>Add New Recipe</Button>
+      </div>
 
-      {showForm && (
-        <form onSubmit={handleSubmit} className="card mb-4">
-          <div className="card-body">
-            <h2>Add New Recipe</h2>
-            <div className="form-group">
-              <label htmlFor="title">Title</label>
-              <input
-                type="text"
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
-                className="form-input"
-                required
-              />
-            </div>
+      <form onSubmit={handleSearch} className="mb-8">
+        <div className="flex gap-2">
+          <Input
+            type="text"
+            placeholder="Search for recipes by ingredients..."
+            value={searchQuery}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+            className="flex-1"
+          />
+          <Button type="submit" disabled={searching}>
+            {searching ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+            ) : (
+              'Search'
+            )}
+          </Button>
+        </div>
+      </form>
 
-            <div className="form-group">
-              <label htmlFor="mealType">Meal Type</label>
-              <select
-                id="mealType"
-                name="mealType"
-                value={formData.mealType}
-                onChange={handleInputChange}
-                className="form-input"
-                required
-              >
-                <option value="Breakfast">Breakfast</option>
-                <option value="Lunch/Dinner">Lunch/Dinner</option>
-                <option value="Dessert">Dessert</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="region">Region</label>
-              <input
-                type="text"
-                id="region"
-                name="region"
-                value={formData.region}
-                onChange={handleInputChange}
-                className="form-input"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="ingredients">Ingredients</label>
-              <textarea
-                id="ingredients"
-                name="ingredients"
-                value={formData.ingredients}
-                onChange={handleInputChange}
-                className="form-input"
-                rows={5}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="instructions">Instructions</label>
-              <textarea
-                id="instructions"
-                name="instructions"
-                value={formData.instructions}
-                onChange={handleInputChange}
-                className="form-input"
-                rows={5}
-                required
-              />
-            </div>
-
-            <button type="submit" className="btn btn-primary">
-              Save Recipe
-            </button>
+      {searchResults.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">Search Results</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {searchResults.map((recipe) => (
+              <Card key={recipe.id}>
+                <CardHeader>
+                  <CardTitle>{recipe.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <img
+                    src={recipe.image}
+                    alt={recipe.title}
+                    className="w-full h-48 object-cover rounded-md mb-4"
+                  />
+                  <Button
+                    onClick={() => handleImportRecipe(recipe)}
+                    className="w-full"
+                  >
+                    Import Recipe
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </form>
+        </div>
       )}
 
-      <div className="row">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {recipes.map((recipe) => (
-          <div key={recipe.id} className="col-md-6 mb-4">
-            <div className="card">
-              <div className="card-body">
-                <h3>{recipe.title}</h3>
-                <p><strong>Meal Type:</strong> {recipe.mealType}</p>
-                <p><strong>Region:</strong> {recipe.region}</p>
-                <h4>Ingredients:</h4>
-                <p>{recipe.ingredients}</p>
-                <h4>Instructions:</h4>
-                <p>{recipe.instructions}</p>
-              </div>
-            </div>
-          </div>
+          <Card 
+            key={recipe.id} 
+            className="cursor-pointer hover:shadow-lg transition-shadow" 
+            onClick={() => navigate(`/recipes/${recipe.id}`)}
+          >
+            <CardHeader>
+              <CardTitle>{recipe.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {recipe.imageUrl && (
+                <img
+                  src={recipe.imageUrl}
+                  alt={recipe.title}
+                  className="w-full h-48 object-cover rounded-md mb-4"
+                />
+              )}
+              <p className="text-gray-600 line-clamp-3">{recipe.description}</p>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </div>
   );
-};
-
-export default YourRecipes; 
+} 

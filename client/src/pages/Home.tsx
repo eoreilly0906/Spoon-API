@@ -1,15 +1,16 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import auth from '../utils/auth';
+import { useAuth } from "../context/AuthContext";
 
 const Home = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (auth.loggedIn()) {
+    if (user) {
       navigate('/recipes');
     }
-  }, [navigate]);
+  }, [user, navigate]);
 
   return (
     <div className="container">
