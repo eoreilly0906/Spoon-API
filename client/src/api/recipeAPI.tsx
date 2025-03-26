@@ -106,4 +106,29 @@ export const deleteRecipe = async (id: number): Promise<void> => {
     console.log('Error from recipe deletion:', err);
     throw err;
   }
+};
+
+export const getRecipe = async (id: number): Promise<Recipe> => {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch(`/api/recipes/${id}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch recipe');
+    }
+
+    return await response.json();
+  } catch (err) {
+    console.log('Error from recipe retrieval:', err);
+    throw err;
+  }
 }; 

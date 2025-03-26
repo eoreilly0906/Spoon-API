@@ -1,23 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getRecipes, createRecipe } from '../api/recipeAPI';
-import { searchRecipes, getRecipeDetails, type SpoonacularRecipe } from '../api/spoonacularAPI';
-import { type Recipe, MealTypes } from '../interfaces/Recipe';
+import { getRecipes, deleteRecipe } from '../api/recipeAPI';
+import { type Recipe } from '../interfaces/Recipe';
 import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-
-type CreateRecipeInput = Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>;
 
 export default function YourRecipes() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SpoonacularRecipe[]>([]);
-  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -38,47 +31,23 @@ export default function YourRecipes() {
     }
   };
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
+  const handleDelete = async (e: React.MouseEvent, recipeId: number) => {
+    e.stopPropagation();
+    if (!window.confirm('Are you sure you want to delete this recipe?')) {
+      return;
+    }
 
-    setSearching(true);
     try {
-      const results = await searchRecipes(searchQuery);
-      setSearchResults(results);
+      await deleteRecipe(recipeId);
+      await fetchRecipes();
     } catch (error) {
-      console.error('Error searching recipes:', error);
-    } finally {
-      setSearching(false);
+      console.error('Error deleting recipe:', error);
     }
   };
 
-  const handleImportRecipe = async (spoonacularRecipe: SpoonacularRecipe) => {
-    try {
-      const details = await getRecipeDetails(spoonacularRecipe.id);
-      const newRecipe: CreateRecipeInput = {
-        title: details.title,
-        description: details.summary,
-        ingredients: details.extendedIngredients.map(ing => ing.original).join('\n'),
-        instructions: details.instructions,
-        imageUrl: details.image,
-        servings: details.servings,
-        prepTime: details.readyInMinutes,
-        cookTime: 0,
-        totalTime: details.readyInMinutes,
-        sourceUrl: details.sourceUrl,
-        mealType: MealTypes.LunchDinner,
-        region: 'International',
-        userId: user!.id
-      };
-
-      await createRecipe(newRecipe);
-      await fetchRecipes();
-      setSearchResults([]);
-      setSearchQuery('');
-    } catch (error) {
-      console.error('Error importing recipe:', error);
-    }
+  const handleEdit = (e: React.MouseEvent, recipeId: number) => {
+    e.stopPropagation();
+    navigate(`/recipes/edit/${recipeId}`);
   };
 
   if (loading) {
@@ -90,78 +59,59 @@ export default function YourRecipes() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Your Recipes</h1>
-        <Button onClick={() => navigate('/recipes/new')}>Add New Recipe</Button>
+    <div className="container mx-auto px-4 py-12 max-w-7xl">
+      <div className="flex flex-col items-center mb-12">
+        <h1 className="text-4xl font-bold mb-6">Your Recipes</h1>
+        <Button 
+          onClick={() => navigate('/recipes/new')}
+          className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-2 rounded-full"
+        >
+          Add New Recipe
+        </Button>
       </div>
 
-      <form onSubmit={handleSearch} className="mb-8">
-        <div className="flex gap-2">
-          <Input
-            type="text"
-            placeholder="Search for recipes by ingredients..."
-            value={searchQuery}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-            className="flex-1"
-          />
-          <Button type="submit" disabled={searching}>
-            {searching ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-            ) : (
-              'Search'
-            )}
-          </Button>
-        </div>
-      </form>
-
-      {searchResults.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">Search Results</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {searchResults.map((recipe) => (
-              <Card key={recipe.id}>
-                <CardHeader>
-                  <CardTitle>{recipe.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <img
-                    src={recipe.image}
-                    alt={recipe.title}
-                    className="w-full h-48 object-cover rounded-md mb-4"
-                  />
-                  <Button
-                    onClick={() => handleImportRecipe(recipe)}
-                    className="w-full"
-                  >
-                    Import Recipe
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {recipes.map((recipe) => (
           <Card 
             key={recipe.id} 
-            className="cursor-pointer hover:shadow-lg transition-shadow" 
-            onClick={() => navigate(`/recipes/${recipe.id}`)}
+            className="overflow-hidden rounded-xl hover:shadow-xl transition-all duration-300 border-2 border-gray-100"
           >
-            <CardHeader>
-              <CardTitle>{recipe.title}</CardTitle>
+            <CardHeader className="pb-3 bg-gray-50">
+              <CardTitle className="text-xl text-center">{recipe.title}</CardTitle>
             </CardHeader>
-            <CardContent>
-              {recipe.imageUrl && (
-                <img
-                  src={recipe.imageUrl}
-                  alt={recipe.title}
-                  className="w-full h-48 object-cover rounded-md mb-4"
-                />
-              )}
-              <p className="text-gray-600 line-clamp-3">{recipe.description}</p>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-center gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">
+                  <span className="font-medium">Meal Type:</span>
+                  <span>{recipe.mealType}</span>
+                </div>
+                <div className="flex items-center justify-center gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">
+                  <span className="font-medium">Region:</span>
+                  <span>{recipe.region}</span>
+                </div>
+                <div className="bg-white p-4 rounded-lg border border-gray-100">
+                  <h3 className="font-medium text-sm mb-2 text-center">Ingredients</h3>
+                  <p className="text-sm text-gray-600 line-clamp-3 text-center">{recipe.ingredients}</p>
+                </div>
+                <div className="bg-white p-4 rounded-lg border border-gray-100">
+                  <h3 className="font-medium text-sm mb-2 text-center">Instructions</h3>
+                  <p className="text-sm text-gray-600 line-clamp-3 text-center">{recipe.instructions}</p>
+                </div>
+                <div className="flex gap-3 pt-4 border-t border-gray-100">
+                  <Button
+                    onClick={(e) => handleEdit(e, recipe.id)}
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg"
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    onClick={(e) => handleDelete(e, recipe.id)}
+                    className="flex-1 bg-red-500 hover:bg-red-600 text-white rounded-lg"
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         ))}

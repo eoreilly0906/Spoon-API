@@ -2,13 +2,14 @@ import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './index.css';
 
-import App from './App.tsx';
+import App from './App';
 
-import ErrorPage from './pages/ErrorPage.tsx';
-import Home from './pages/Home.tsx';
-import Login from './pages/Login.tsx';
-import YourRecipes from './pages/YourRecipes.tsx';
-import NewRecipe from './pages/NewRecipe.tsx';
+import ErrorPage from './pages/ErrorPage';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import YourRecipes from './pages/YourRecipes';
+import NewRecipe from './pages/NewRecipe';
+import EditRecipe from './pages/EditRecipe';
 
 const router = createBrowserRouter([
   {
@@ -31,6 +32,10 @@ const router = createBrowserRouter([
       {
         path: '/recipes/new',
         element: <NewRecipe />
+      },
+      {
+        path: '/recipes/edit/:id',
+        element: <EditRecipe />
       }
     ]
   }

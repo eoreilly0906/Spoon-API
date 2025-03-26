@@ -9,15 +9,8 @@ export type MealType = typeof MealTypes[keyof typeof MealTypes];
 export interface Recipe {
   id: number;
   title: string;
-  description?: string;
   ingredients: string;
   instructions: string;
-  imageUrl?: string;
-  servings?: number;
-  prepTime?: number;
-  cookTime?: number;
-  totalTime?: number;
-  sourceUrl?: string;
   mealType: MealType;
   region: string;
   userId: number;
