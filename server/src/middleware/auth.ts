@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 // Define the interface for the JWT payload
 interface JwtPayload {
   username: string;
+  userId: number;
 }
 
 // Middleware function to authenticate JWT token
