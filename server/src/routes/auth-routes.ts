@@ -18,7 +18,7 @@ const verifyToken = (req: AuthenticatedRequest, res: Response, next: NextFunctio
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY || '') as { userId: number };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || '') as { userId: number };
     req.userId = decoded.userId;
     next();
   } catch (error) {
@@ -65,7 +65,7 @@ export const login = async (req: Request, res: Response) => {
   }
 
   // Get the secret key from environment variables
-  const secretKey = process.env.JWT_SECRET_KEY || '';
+  const secretKey = process.env.JWT_SECRET || '';
 
   // Generate a JWT token for the authenticated user
   const token = jwt.sign({ username, userId: user.id }, secretKey, { expiresIn: '1h' });
