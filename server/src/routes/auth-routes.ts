@@ -45,31 +45,55 @@ export const getCurrentUser = async (req: AuthenticatedRequest, res: Response) =
 
 // Login function to authenticate a user
 export const login = async (req: Request, res: Response) => {
-  const { username, password } = req.body;  // Extract username and password from request body
+  try {
+    const { username, password } = req.body;  // Extract username and password from request body
+    console.log('Login attempt received:', { username, hasPassword: !!password });
 
-  // Find the user in the database by username
-  const user = await User.findOne({
-    where: { username },
-  });
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Username and password are required' });
+    }
 
-  // If user is not found, send an authentication failed response
-  if (!user) {
-    return res.status(401).json({ message: 'Authentication failed' });
+    // Find the user in the database by username
+    const user = await User.findOne({
+      where: { username },
+    });
+
+    // If user is not found, send an authentication failed response
+    if (!user) {
+      console.log('User not found:', username);
+      return res.status(401).json({ message: 'Authentication failed: User not found' });
+    }
+
+    console.log('User found:', {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      hasPassword: !!user.password
+    });
+
+    console.log('Comparing passwords...');
+    // Compare the provided password with the stored hashed password
+    const passwordIsValid = await bcrypt.compare(password, user.password);
+    console.log('Password valid:', passwordIsValid);
+    
+    // If password is invalid, send an authentication failed response
+    if (!passwordIsValid) {
+      console.log('Password validation failed');
+      return res.status(401).json({ message: 'Authentication failed: Invalid password' });
+    }
+
+    // Get the secret key from environment variables
+    const secretKey = process.env.JWT_SECRET || '';
+    console.log('JWT_SECRET exists:', !!secretKey);
+
+    // Generate a JWT token for the authenticated user
+    const token = jwt.sign({ username, userId: user.id }, secretKey, { expiresIn: '1h' });
+    console.log('Token generated successfully');
+    return res.json({ token });  // Send the token as a JSON response
+  } catch (error) {
+    console.error('Login error:', error);
+    return res.status(500).json({ message: 'Internal server error during login' });
   }
-
-  // Compare the provided password with the stored hashed password
-  const passwordIsValid = await bcrypt.compare(password, user.password);
-  // If password is invalid, send an authentication failed response
-  if (!passwordIsValid) {
-    return res.status(401).json({ message: 'Authentication failed' });
-  }
-
-  // Get the secret key from environment variables
-  const secretKey = process.env.JWT_SECRET || '';
-
-  // Generate a JWT token for the authenticated user
-  const token = jwt.sign({ username, userId: user.id }, secretKey, { expiresIn: '1h' });
-  return res.json({ token });  // Send the token as a JSON response
 };
 
 // Create a new router instance

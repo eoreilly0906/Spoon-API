@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserData = async (token: string) => {
     try {
-      const response = await fetch('/api/auth/me', {
+      const response = await fetch('http://localhost:3001/api/auth/me', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -48,7 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (username: string, password: string) => {
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('http://localhost:3001/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -56,11 +56,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify({ username, password }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Login failed');
+        console.error('Login failed:', data.message);
+        throw new Error(data.message || 'Login failed');
       }
 
-      const { token } = await response.json();
+      const { token } = data;
       localStorage.setItem('token', token);
       await fetchUserData(token);
     } catch (error) {
