@@ -33,10 +33,7 @@ export default function NewRecipe() {
     setError('');
 
     try {
-      await createRecipe({
-        ...formData,
-        ingredients: formData.ingredients.split('\n')
-      });
+      await createRecipe(formData);
       navigate('/recipes');
     } catch (err) {
       console.error('Submit error:', err);

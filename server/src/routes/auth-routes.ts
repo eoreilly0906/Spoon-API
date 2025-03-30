@@ -18,7 +18,7 @@ const verifyToken = (req: AuthenticatedRequest, res: Response, next: NextFunctio
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || '') as { userId: number };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || '') as { userId: number, username: string };
     req.userId = decoded.userId;
     next();
   } catch (error) {
@@ -29,6 +29,10 @@ const verifyToken = (req: AuthenticatedRequest, res: Response, next: NextFunctio
 // Get current user data
 export const getCurrentUser = async (req: AuthenticatedRequest, res: Response) => {
   try {
+    if (!req.userId) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
     const user = await User.findByPk(req.userId, {
       attributes: ['id', 'username', 'email']
     });
@@ -39,6 +43,7 @@ export const getCurrentUser = async (req: AuthenticatedRequest, res: Response) =
 
     return res.json(user);
   } catch (error) {
+    console.error('Error in getCurrentUser:', error);
     return res.status(500).json({ message: 'Error fetching user data' });
   }
 };
@@ -89,7 +94,14 @@ export const login = async (req: Request, res: Response) => {
     // Generate a JWT token for the authenticated user
     const token = jwt.sign({ username, userId: user.id }, secretKey, { expiresIn: '1h' });
     console.log('Token generated successfully');
-    return res.json({ token });  // Send the token as a JSON response
+    
+    // Return both token and user data
+    return res.json({ 
+      token,
+      userId: user.id,
+      username: user.username,
+      email: user.email
+    });
   } catch (error) {
     console.error('Login error:', error);
     return res.status(500).json({ message: 'Internal server error during login' });

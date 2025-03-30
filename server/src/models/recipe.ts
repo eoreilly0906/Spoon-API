@@ -9,6 +9,7 @@ interface RecipeAttributes {
   ingredients: string;
   instructions: string;
   userId: number;
+  image?: string;
 }
 
 // Define the optional attributes for creating a new Recipe
@@ -23,6 +24,7 @@ export class Recipe extends Model<RecipeAttributes, RecipeCreationAttributes> im
   public ingredients!: string;
   public instructions!: string;
   public userId!: number;
+  public image?: string;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -64,6 +66,10 @@ export function RecipeFactory(sequelize: Sequelize): typeof Recipe {
           model: 'users',
           key: 'id'
         }
+      },
+      image: {
+        type: DataTypes.STRING,
+        allowNull: true
       }
     },
     {

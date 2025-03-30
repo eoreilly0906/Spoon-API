@@ -7,8 +7,13 @@ interface JwtPayload {
   userId: number;
 }
 
+// Extend Request type to include userId
+interface AuthenticatedRequest extends Request {
+  userId?: number;
+}
+
 // Middleware function to authenticate JWT token
-export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
+export const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   // Get the authorization header from the request
   const authHeader = req.headers.authorization;
 
@@ -21,13 +26,13 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     const secretKey = process.env.JWT_SECRET || '';
 
     // Verify the JWT token
-    jwt.verify(token, secretKey, (err, user) => {
+    jwt.verify(token, secretKey, (err, decoded) => {
       if (err) {
         return res.sendStatus(403); // Send forbidden status if the token is invalid
       }
 
-      // Attach the user information to the request object
-      req.user = user as JwtPayload;
+      // Attach the user ID to the request object
+      req.userId = (decoded as JwtPayload).userId;
       return next(); // Call the next middleware function
     });
   } else {

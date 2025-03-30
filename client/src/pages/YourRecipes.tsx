@@ -120,7 +120,7 @@ const YourRecipes = () => {
                   className="flex items-center px-4 py-3 hover:bg-dark-surface/50"
                 >
                   <img
-                    src={recipe.image || 'https://via.placeholder.com/100x100?text=No+Image'}
+                    src={recipe.image || 'https://placehold.co/100x100/1a1a1a/ffffff?text=No+Image'}
                     alt={recipe.title}
                     className="w-12 h-12 rounded object-cover"
                   />

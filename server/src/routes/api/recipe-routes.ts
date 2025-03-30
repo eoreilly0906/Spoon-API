@@ -2,16 +2,21 @@ import express from 'express';
 import type { Request, Response } from 'express';
 import { Recipe } from '../../models/index.js';
 
+// Extend Request type to include userId
+interface AuthenticatedRequest extends Request {
+  userId?: number;
+}
+
 const router = express.Router();
 
 // GET /recipes - Get all recipes for the logged-in user
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    if (!req.user?.userId) {
+    if (!req.userId) {
       return res.status(401).json({ message: 'User not authenticated' });
     }
     const recipes = await Recipe.findAll({
-      where: { userId: req.user.userId },
+      where: { userId: req.userId },
       order: [['createdAt', 'DESC']]
     });
     return res.json(recipes);
@@ -21,8 +26,8 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // POST /recipes - Create a new recipe
-router.post('/', async (req: Request, res: Response) => {
-  if (!req.user?.userId) {
+router.post('/', async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.userId) {
     return res.status(401).json({ message: 'User not authenticated' });
   }
   const { title, mealType, region, ingredients, instructions } = req.body;
@@ -33,7 +38,7 @@ router.post('/', async (req: Request, res: Response) => {
       region,
       ingredients,
       instructions,
-      userId: req.user.userId
+      userId: req.userId
     });
     return res.status(201).json(newRecipe);
   } catch (error: any) {
@@ -42,15 +47,15 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 // PUT /recipes/:id - Update a recipe
-router.put('/:id', async (req: Request, res: Response) => {
-  if (!req.user?.userId) {
+router.put('/:id', async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.userId) {
     return res.status(401).json({ message: 'User not authenticated' });
   }
   const { id } = req.params;
   const { title, mealType, region, ingredients, instructions } = req.body;
   try {
     const recipe = await Recipe.findOne({
-      where: { id, userId: req.user.userId }
+      where: { id, userId: req.userId }
     });
     if (recipe) {
       await recipe.update({
@@ -70,14 +75,14 @@ router.put('/:id', async (req: Request, res: Response) => {
 });
 
 // DELETE /recipes/:id - Delete a recipe
-router.delete('/:id', async (req: Request, res: Response) => {
-  if (!req.user?.userId) {
+router.delete('/:id', async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.userId) {
     return res.status(401).json({ message: 'User not authenticated' });
   }
   const { id } = req.params;
   try {
     const recipe = await Recipe.findOne({
-      where: { id, userId: req.user.userId }
+      where: { id, userId: req.userId }
     });
     if (recipe) {
       await recipe.destroy();

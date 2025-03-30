@@ -14,6 +14,7 @@ export interface Recipe {
   mealType: MealType;
   region: string;
   userId: number;
+  image?: string;
   createdAt: string | Date;
   updatedAt: string | Date;
 } 

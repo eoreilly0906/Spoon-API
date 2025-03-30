@@ -4,6 +4,8 @@ const getAuthToken = () => {
   return localStorage.getItem('token');
 };
 
+const API_BASE_URL = 'http://localhost:3001';
+
 export const getRecipes = async (): Promise<Recipe[]> => {
   try {
     const token = getAuthToken();
@@ -11,7 +13,7 @@ export const getRecipes = async (): Promise<Recipe[]> => {
       throw new Error('No authentication token found');
     }
 
-    const response = await fetch('/api/recipes', {
+    const response = await fetch(`${API_BASE_URL}/api/recipes`, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
@@ -37,7 +39,7 @@ export const createRecipe = async (recipeData: Omit<Recipe, 'id' | 'userId' | 'c
       throw new Error('No authentication token found');
     }
 
-    const response = await fetch('/api/recipes', {
+    const response = await fetch(`${API_BASE_URL}/api/recipes`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -64,7 +66,7 @@ export const updateRecipe = async (id: number, recipeData: Partial<Recipe>): Pro
       throw new Error('No authentication token found');
     }
 
-    const response = await fetch(`/api/recipes/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/recipes/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -91,7 +93,7 @@ export const deleteRecipe = async (id: number): Promise<void> => {
       throw new Error('No authentication token found');
     }
 
-    const response = await fetch(`/api/recipes/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/recipes/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -115,7 +117,7 @@ export const getRecipe = async (id: number): Promise<Recipe> => {
       throw new Error('No authentication token found');
     }
 
-    const response = await fetch(`/api/recipes/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/recipes/${id}`, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`

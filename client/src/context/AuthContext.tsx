@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   id: number;
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check for stored token
@@ -30,8 +32,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await fetch('http://localhost:3001/api/auth/me', {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+        },
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -52,7 +56,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ username, password }),
       });
 
@@ -65,7 +71,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const { token } = data;
       localStorage.setItem('token', token);
-      await fetchUserData(token);
+      
+      // Set user data immediately after successful login
+      setUser({
+        id: data.userId,
+        username: data.username,
+        email: data.email
+      });
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -75,6 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     localStorage.removeItem('token');
+    navigate('/login');
   };
 
   return (

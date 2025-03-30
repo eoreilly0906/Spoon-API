@@ -1,4 +1,4 @@
-const forceDatabaseRefresh = true;
+const forceDatabaseRefresh = false;
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -14,7 +14,10 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}));
 app.use(express.json());
 
 // API Routes
