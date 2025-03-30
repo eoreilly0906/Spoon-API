@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { searchRecipes } from '../api/spoonacularAPI';
+import { searchRecipes, getRecipeDetails } from '../api/spoonacularAPI';
 import { createRecipe } from '../api/recipeAPI';
+import { useAuth } from '../context/AuthContext';
+import { MealTypes } from '../interfaces/Recipe';
 
-interface Recipe {
+interface SpoonacularRecipe {
   id: number;
   title: string;
   image: string;
@@ -11,8 +13,9 @@ interface Recipe {
 }
 
 const SearchRecipes = () => {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [recipes, setRecipes] = useState<SpoonacularRecipe[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -32,14 +35,22 @@ const SearchRecipes = () => {
     }
   };
 
-  const handleSaveRecipe = async (recipe: Recipe) => {
+  const handleSaveRecipe = async (recipe: SpoonacularRecipe) => {
     try {
+      // Fetch detailed recipe information
+      const details = await getRecipeDetails(recipe.id);
+      
+      // Create recipe with all required fields
       await createRecipe({
-        title: recipe.title,
-        image: recipe.image,
-        ingredients: [], // You might want to fetch detailed ingredients here
-        instructions: '', // You might want to fetch detailed instructions here
+        title: details.title,
+        image: details.image,
+        ingredients: details.extendedIngredients.map(ing => ing.original).join('\n'),
+        instructions: details.instructions,
+        mealType: MealTypes.LunchDinner,
+        region: 'International',
+        userId: user!.id
       });
+      
       alert('Recipe saved successfully!');
     } catch (err) {
       console.error('Save error:', err);
