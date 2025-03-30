@@ -22,6 +22,7 @@ export default function NewRecipe() {
     region: 'International',
     userId: user!.id
   });
+  const [error, setError] = useState('');
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,29 +68,33 @@ export default function NewRecipe() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+
     try {
-      await createRecipe(formData);
+      await createRecipe({
+        ...formData,
+        ingredients: formData.ingredients.split('\n')
+      });
       navigate('/recipes');
-    } catch (error) {
-      console.error('Error creating recipe:', error);
+    } catch (err) {
+      console.error('Submit error:', err);
+      setError('Failed to create recipe. Please try again.');
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-7xl">
-      <div className="flex flex-col items-center mb-12">
-        <h1 className="text-4xl font-bold mb-6">Add New Recipe</h1>
-        <Button 
-          onClick={() => navigate('/recipes')}
-          className="bg-gray-500 hover:bg-gray-600 text-white px-8 py-2 rounded-full"
-        >
-          Back to Recipes
-        </Button>
-      </div>
+    <div className="container mx-auto px-4 py-8 mt-16 min-h-screen bg-dark-background">
+      <h1 className="text-4xl font-bold mb-8 text-dark-text">Create New Recipe</h1>
+
+      {error && (
+        <div className="p-4 mb-8 bg-red-900/50 border-l-4 border-red-600 text-dark-text">
+          {error}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-gray-100">
-          <h2 className="text-2xl font-semibold mb-6 text-center">Search Existing Recipes</h2>
+        <div className="bg-gray-800 rounded-xl p-6 shadow-lg border-2 border-gray-700">
+          <h2 className="text-2xl font-semibold mb-6 text-center text-emerald-400">Search Existing Recipes</h2>
           <form onSubmit={handleSearch} className="mb-8">
             <div className="flex gap-3">
               <Input
@@ -97,12 +102,12 @@ export default function NewRecipe() {
                 placeholder="Search for recipes by ingredients..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 rounded-lg"
+                className="flex-1 rounded-lg bg-gray-700 border-gray-600 text-white placeholder-gray-400"
               />
               <Button 
                 type="submit" 
                 disabled={searching}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 rounded-lg"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 rounded-lg"
               >
                 {searching ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -116,9 +121,9 @@ export default function NewRecipe() {
           {searchResults.length > 0 && (
             <div className="space-y-6">
               {searchResults.map((recipe) => (
-                <Card key={recipe.id} className="overflow-hidden rounded-xl hover:shadow-md transition-all duration-300 border-2 border-gray-100">
-                  <CardHeader className="pb-3 bg-gray-50">
-                    <CardTitle className="text-lg text-center">{recipe.title}</CardTitle>
+                <Card key={recipe.id} className="overflow-hidden rounded-xl hover:shadow-md transition-all duration-300 border-2 border-gray-700 bg-gray-800">
+                  <CardHeader className="pb-3 bg-gray-700">
+                    <CardTitle className="text-lg text-center text-white">{recipe.title}</CardTitle>
                   </CardHeader>
                   <CardContent className="p-4">
                     <img
@@ -128,7 +133,7 @@ export default function NewRecipe() {
                     />
                     <Button
                       onClick={() => handleImportRecipe(recipe)}
-                      className="w-full bg-green-500 hover:bg-green-600 text-white rounded-lg"
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
                     >
                       Import Recipe
                     </Button>
@@ -139,60 +144,60 @@ export default function NewRecipe() {
           )}
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-gray-100">
-          <h2 className="text-2xl font-semibold mb-6 text-center">Recipe Details</h2>
+        <div className="bg-gray-800 rounded-xl p-6 shadow-lg border-2 border-gray-700">
+          <h2 className="text-2xl font-semibold mb-6 text-center text-emerald-400">Recipe Details</h2>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <Label htmlFor="title" className="text-base block text-center mb-2">Title</Label>
+              <Label htmlFor="title" className="text-base block text-center mb-2 text-gray-300">Title</Label>
               <Input
                 id="title"
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
                 required
-                className="rounded-lg"
+                className="rounded-lg bg-gray-700 border-gray-600 text-white"
                 placeholder="Enter recipe title"
               />
             </div>
 
             <div>
-              <Label htmlFor="ingredients" className="text-base block text-center mb-2">Ingredients</Label>
+              <Label htmlFor="ingredients" className="text-base block text-center mb-2 text-gray-300">Ingredients</Label>
               <Textarea
                 id="ingredients"
                 name="ingredients"
                 value={formData.ingredients}
                 onChange={handleChange}
                 required
-                className="min-h-[150px] rounded-lg"
+                className="min-h-[150px] rounded-lg bg-gray-700 border-gray-600 text-white"
                 placeholder="Enter ingredients (one per line)"
               />
             </div>
 
             <div>
-              <Label htmlFor="instructions" className="text-base block text-center mb-2">Instructions</Label>
+              <Label htmlFor="instructions" className="text-base block text-center mb-2 text-gray-300">Instructions</Label>
               <Textarea
                 id="instructions"
                 name="instructions"
                 value={formData.instructions}
                 onChange={handleChange}
                 required
-                className="min-h-[200px] rounded-lg"
+                className="min-h-[200px] rounded-lg bg-gray-700 border-gray-600 text-white"
                 placeholder="Enter step-by-step instructions"
               />
             </div>
 
             <div>
-              <Label htmlFor="mealType" className="text-base block text-center mb-2">Meal Type</Label>
+              <Label htmlFor="mealType" className="text-base block text-center mb-2 text-gray-300">Meal Type</Label>
               <Select
                 value={formData.mealType}
                 onValueChange={(value: typeof MealTypes[keyof typeof MealTypes]) => setFormData(prev => ({ ...prev, mealType: value }))}
               >
-                <SelectTrigger className="rounded-lg">
+                <SelectTrigger className="rounded-lg bg-gray-700 border-gray-600 text-white">
                   <SelectValue placeholder="Select meal type" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-gray-800 border-gray-700">
                   {Object.values(MealTypes).map((type) => (
-                    <SelectItem key={type} value={type}>
+                    <SelectItem key={type} value={type} className="text-white hover:bg-gray-700">
                       {type}
                     </SelectItem>
                   ))}
@@ -201,24 +206,33 @@ export default function NewRecipe() {
             </div>
 
             <div>
-              <Label htmlFor="region" className="text-base block text-center mb-2">Region</Label>
+              <Label htmlFor="region" className="text-base block text-center mb-2 text-gray-300">Region</Label>
               <Input
                 id="region"
                 name="region"
                 value={formData.region}
                 onChange={handleChange}
                 required
-                className="rounded-lg"
+                className="rounded-lg bg-gray-700 border-gray-600 text-white"
                 placeholder="Enter recipe region"
               />
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-lg py-2"
-            >
-              Create Recipe
-            </Button>
+            <div className="flex justify-end gap-4">
+              <button
+                type="button"
+                onClick={() => navigate('/recipes')}
+                className="px-6 py-3 bg-dark-surface text-dark-text rounded hover:bg-opacity-80 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-3 bg-dark-primary text-dark-text rounded hover:bg-opacity-80 transition-colors"
+              >
+                Create Recipe
+              </button>
+            </div>
           </form>
         </div>
       </div>

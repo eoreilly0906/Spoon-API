@@ -10,6 +10,7 @@ import Login from './pages/Login';
 import YourRecipes from './pages/YourRecipes';
 import NewRecipe from './pages/NewRecipe';
 import EditRecipe from './pages/EditRecipe';
+import SearchRecipes from './pages/SearchRecipes';
 
 const router = createBrowserRouter([
   {
@@ -36,6 +37,10 @@ const router = createBrowserRouter([
       {
         path: '/recipes/edit/:id',
         element: <EditRecipe />
+      },
+      {
+        path: '/search',
+        element: <SearchRecipes />
       }
     ]
   }
