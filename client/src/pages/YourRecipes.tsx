@@ -3,11 +3,36 @@ import { Link } from 'react-router-dom';
 import { getRecipes, deleteRecipe } from '../api/recipeAPI';
 import { MealTypes, Recipe } from '../interfaces/Recipe';
 
+const REGIONS = [
+  'All Regions',
+  'Asian',
+  'Mediterranean',
+  'Mexican',
+  'Italian',
+  'Indian',
+  'Middle Eastern',
+  'Caribbean',
+  'African',
+  'Latin American',
+  'European',
+  'American',
+  'Japanese',
+  'Chinese',
+  'Thai',
+  'Greek',
+  'Spanish',
+  'French',
+  'German',
+  'British',
+  'Fusion',
+  'Other'
+];
+
 const YourRecipes = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [sortBy, setSortBy] = useState<'date' | 'title'>('date');
+  const [selectedRegion, setSelectedRegion] = useState('All Regions');
   const [filterBy, setFilterBy] = useState<string>('all');
 
   useEffect(() => {
@@ -39,13 +64,14 @@ const YourRecipes = () => {
   };
 
   const sortedAndFilteredRecipes = [...recipes]
-    .sort((a, b) => {
-      if (sortBy === 'date') {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      }
-      return a.title.localeCompare(b.title);
+    .filter(recipe => {
+      // First filter by meal type
+      const mealTypeMatch = filterBy === 'all' || recipe.mealType === filterBy;
+      // Then filter by region
+      const regionMatch = selectedRegion === 'All Regions' || recipe.region === selectedRegion;
+      return mealTypeMatch && regionMatch;
     })
-    .filter(recipe => filterBy === 'all' || recipe.mealType === filterBy);
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   if (loading) {
     return (
@@ -64,12 +90,15 @@ const YourRecipes = () => {
               <h1 className="text-4xl font-bold text-dark-text">Your Recipes</h1>
               <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
                 <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as 'date' | 'title')}
+                  value={selectedRegion}
+                  onChange={(e) => setSelectedRegion(e.target.value)}
                   className="px-4 py-2 bg-dark-surface border border-dark-border text-dark-text rounded-lg flex-1 sm:flex-none text-base"
                 >
-                  <option value="date">Sort by Date</option>
-                  <option value="title">Sort by Title</option>
+                  {REGIONS.map((region) => (
+                    <option key={region} value={region}>
+                      {region}
+                    </option>
+                  ))}
                 </select>
                 <select
                   value={filterBy}
@@ -122,6 +151,9 @@ const YourRecipes = () => {
                         <div className="flex items-center gap-6 text-base text-dark-text-muted">
                           <span className="px-4 py-1.5 bg-dark-surface/50 rounded-full">
                             {recipe.mealType}
+                          </span>
+                          <span className="px-4 py-1.5 bg-dark-surface/50 rounded-full">
+                            {recipe.region}
                           </span>
                           <span>{recipe.ingredients.split('\n').length} ingredients</span>
                         </div>
