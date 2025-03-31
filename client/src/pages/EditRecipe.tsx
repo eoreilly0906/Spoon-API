@@ -14,7 +14,8 @@ export default function EditRecipe() {
     ingredients: '',
     instructions: '',
     mealType: MealTypes.LunchDinner,
-    region: 'International'
+    region: 'International',
+    image: ''
   });
   const [loading, setLoading] = useState(true);
 
@@ -34,7 +35,8 @@ export default function EditRecipe() {
         ingredients: recipe.ingredients,
         instructions: recipe.instructions,
         mealType: recipe.mealType,
-        region: recipe.region
+        region: recipe.region,
+        image: recipe.image || ''
       });
     } catch (error) {
       console.error('Error fetching recipe:', error);
@@ -96,6 +98,18 @@ export default function EditRecipe() {
                       onChange={handleChange}
                       required
                       className="bg-dark-surface border-dark-border text-dark-text"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="image" className="text-dark-text">Image URL</Label>
+                    <Input
+                      id="image"
+                      name="image"
+                      value={formData.image}
+                      onChange={handleChange}
+                      className="bg-dark-surface border-dark-border text-dark-text"
+                      placeholder="Enter image URL"
                     />
                   </div>
 

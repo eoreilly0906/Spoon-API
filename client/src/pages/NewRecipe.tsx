@@ -16,7 +16,8 @@ export default function NewRecipe() {
     instructions: '',
     mealType: MealTypes.LunchDinner,
     region: 'International',
-    userId: user!.id
+    userId: user!.id,
+    image: ''
   });
   const [error, setError] = useState('');
 
@@ -72,6 +73,18 @@ export default function NewRecipe() {
                       required
                       className="bg-dark-surface border-dark-border text-dark-text"
                       placeholder="Enter recipe title"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="image" className="text-dark-text">Image URL</Label>
+                    <Input
+                      id="image"
+                      name="image"
+                      value={formData.image}
+                      onChange={handleChange}
+                      className="bg-dark-surface border-dark-border text-dark-text"
+                      placeholder="Enter image URL"
                     />
                   </div>
 
