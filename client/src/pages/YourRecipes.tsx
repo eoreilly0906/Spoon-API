@@ -1,20 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getRecipes, deleteRecipe } from '../api/recipeAPI';
-import { MealTypes } from '../interfaces/Recipe';
-
-interface Recipe {
-  id: number;
-  title: string;
-  image: string;
-  ingredients: string;
-  instructions: string;
-  mealType: string;
-  region: string;
-  userId: number;
-  createdAt: string;
-  updatedAt: string;
-}
+import { MealTypes, Recipe } from '../interfaces/Recipe';
 
 const YourRecipes = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -62,98 +49,109 @@ const YourRecipes = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 mt-16 min-h-screen bg-dark-background">
+      <div className="min-h-screen bg-dark-background flex items-center justify-center">
         <div className="text-dark-text text-center">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 mt-16 min-h-screen bg-dark-background">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-dark-text">Your Recipes</h1>
-          <div className="flex items-center gap-3">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as 'date' | 'title')}
-              className="px-3 py-1.5 bg-dark-surface border border-dark-border text-dark-text rounded"
-            >
-              <option value="date">Sort by Date</option>
-              <option value="title">Sort by Title</option>
-            </select>
-            <select
-              value={filterBy}
-              onChange={(e) => setFilterBy(e.target.value)}
-              className="px-3 py-1.5 bg-dark-surface border border-dark-border text-dark-text rounded"
-            >
-              <option value="all">All Meal Types</option>
-              {Object.values(MealTypes).map((type) => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-            <Link
-              to="/recipes/new"
-              className="px-4 py-1.5 bg-dark-primary text-dark-text rounded hover:bg-opacity-80"
-            >
-              Add Recipe
-            </Link>
+    <div className="min-h-screen bg-dark-background">
+      <div className="main-content">
+        <div className="container mx-auto px-6 py-12">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-12">
+              <h1 className="text-4xl font-bold text-dark-text">Your Recipes</h1>
+              <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as 'date' | 'title')}
+                  className="px-4 py-2 bg-dark-surface border border-dark-border text-dark-text rounded-lg flex-1 sm:flex-none text-base"
+                >
+                  <option value="date">Sort by Date</option>
+                  <option value="title">Sort by Title</option>
+                </select>
+                <select
+                  value={filterBy}
+                  onChange={(e) => setFilterBy(e.target.value)}
+                  className="px-4 py-2 bg-dark-surface border border-dark-border text-dark-text rounded-lg flex-1 sm:flex-none text-base"
+                >
+                  <option value="all">All Meal Types</option>
+                  {Object.values(MealTypes).map((type) => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+                <Link
+                  to="/recipes/new"
+                  className="px-6 py-2 bg-dark-primary text-dark-text rounded-lg hover:bg-opacity-80 flex-1 sm:flex-none text-center text-base font-medium"
+                >
+                  Add Recipe
+                </Link>
+              </div>
+            </div>
+
+            {error && (
+              <div className="p-4 mb-8 bg-red-900/50 border-l-4 border-red-600 text-dark-text rounded-lg">
+                {error}
+              </div>
+            )}
+
+            {recipes.length === 0 ? (
+              <div className="text-center py-12 bg-dark-surface rounded-lg">
+                <p className="text-dark-text-muted text-lg">No recipes found. Try adding some!</p>
+              </div>
+            ) : (
+              <div className="bg-dark-surface rounded-lg shadow-lg overflow-hidden">
+                <div className="divide-y divide-dark-border">
+                  {sortedAndFilteredRecipes.map((recipe) => (
+                    <div
+                      key={recipe.id}
+                      className="flex items-center p-8 hover:bg-dark-surface/50 transition-colors duration-200"
+                    >
+                      <div className="relative w-32 h-32 flex-shrink-0">
+                        <img
+                          src={recipe.image || 'https://placehold.co/200x200/1a1a1a/ffffff?text=No+Image'}
+                          alt={recipe.title}
+                          className="w-full h-full rounded-lg object-cover shadow-md"
+                        />
+                      </div>
+                      <div className="ml-8 flex-1">
+                        <h3 className="text-2xl font-semibold text-dark-text mb-3">
+                          {recipe.title}
+                        </h3>
+                        <div className="flex items-center gap-6 text-base text-dark-text-muted">
+                          <span className="px-4 py-1.5 bg-dark-surface/50 rounded-full">
+                            {recipe.mealType}
+                          </span>
+                          <span>{recipe.ingredients.split('\n').length} ingredients</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 ml-8">
+                        <Link
+                          to={`/recipes/edit/${recipe.id}`}
+                          className="px-6 py-2.5 bg-dark-primary text-dark-text rounded-lg hover:bg-opacity-90 transition-colors duration-200 font-medium text-base"
+                        >
+                          Edit
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(recipe.id)}
+                          className="px-6 py-2.5 bg-red-600/10 text-red-500 rounded-lg hover:bg-red-600/20 transition-colors duration-200 font-medium text-base"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
-
-        {error && (
-          <div className="p-3 mb-6 bg-red-900/50 border-l-4 border-red-600 text-dark-text rounded">
-            {error}
-          </div>
-        )}
-
-        {recipes.length === 0 ? (
-          <div className="text-center py-8 bg-dark-surface rounded">
-            <p className="text-dark-text-muted">No recipes found. Try adding some!</p>
-          </div>
-        ) : (
-          <div className="bg-dark-surface rounded overflow-hidden">
-            <div className="divide-y divide-dark-border">
-              {sortedAndFilteredRecipes.map((recipe) => (
-                <div
-                  key={recipe.id}
-                  className="flex items-center px-4 py-3 hover:bg-dark-surface/50"
-                >
-                  <img
-                    src={recipe.image || 'https://placehold.co/100x100/1a1a1a/ffffff?text=No+Image'}
-                    alt={recipe.title}
-                    className="w-12 h-12 rounded object-cover"
-                  />
-                  <div className="ml-4 flex-1">
-                    <h3 className="text-lg font-medium text-dark-text">
-                      {recipe.title}
-                    </h3>
-                    <div className="text-sm text-dark-text-muted">
-                      {recipe.mealType} • {recipe.ingredients.split('\n').length} ingredients
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Link
-                      to={`/recipes/edit/${recipe.id}`}
-                      className="px-3 py-1.5 bg-dark-primary text-dark-text rounded hover:bg-opacity-80"
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(recipe.id)}
-                      className="px-3 py-1.5 bg-red-600/10 text-red-500 rounded hover:bg-red-600/20"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
 };
 
-export default YourRecipes; 
+export default YourRecipes;
+
+
