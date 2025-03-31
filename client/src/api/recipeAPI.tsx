@@ -32,7 +32,7 @@ export const getRecipes = async (): Promise<Recipe[]> => {
   }
 };
 
-export const createRecipe = async (recipeData: Omit<Recipe, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<Recipe> => {
+export const createRecipe = async (recipeData: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>): Promise<Recipe> => {
   try {
     const token = getAuthToken();
     if (!token) {
