@@ -45,7 +45,7 @@ const Home = () => {
                       </div>
                     </div>
                     <a
-                      href="/register"
+                      href="/signup"
                       className="w-full sm:w-64 px-8 py-3 bg-dark-surface border-2 border-dark-primary text-dark-text rounded-lg hover:bg-dark-primary/10 transition-colors duration-200 font-semibold text-lg"
                     >
                       Create Account
