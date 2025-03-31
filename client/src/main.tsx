@@ -7,6 +7,7 @@ import App from './App';
 import ErrorPage from './pages/ErrorPage';
 import Home from './pages/Home';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 import YourRecipes from './pages/YourRecipes';
 import NewRecipe from './pages/NewRecipe';
 import EditRecipe from './pages/EditRecipe';
@@ -25,6 +26,10 @@ const router = createBrowserRouter([
       {
         path: '/login',
         element: <Login />
+      },
+      {
+        path: '/signup',
+        element: <Signup />
       },
       {
         path: '/recipes',

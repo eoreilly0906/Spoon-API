@@ -25,6 +25,26 @@ router.get('/', async (req: AuthenticatedRequest, res: Response) => {
   }
 });
 
+// GET /recipes/:id - Get a single recipe by ID
+router.get('/:id', async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.userId) {
+    return res.status(401).json({ message: 'User not authenticated' });
+  }
+  const { id } = req.params;
+  try {
+    const recipe = await Recipe.findOne({
+      where: { id, userId: req.userId }
+    });
+    if (recipe) {
+      return res.json(recipe);
+    } else {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+  } catch (error: any) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+
 // POST /recipes - Create a new recipe
 router.post('/', async (req: AuthenticatedRequest, res: Response) => {
   if (!req.userId) {
